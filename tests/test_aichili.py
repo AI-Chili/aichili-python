@@ -255,6 +255,8 @@ class TestClientSecurityAndPolling(unittest.TestCase):
         )
         bad_job_ids = [
             "",
+            "-rf",
+            "_leading_underscore",
             "..",
             "../credits",
             "../../etc/passwd",
@@ -275,6 +277,23 @@ class TestClientSecurityAndPolling(unittest.TestCase):
             self.assertEqual(j_ctx.exception.code, "INVALID_JOB_ID")
             with self.assertRaises(AiChiliError):
                 validate_job_id(bad_job_id)
+
+        for bad_idem in (
+            "",
+            "   ",
+            "shot-1\r\nX-Injected: 1",
+            "shot\x00null",
+            "shot-1\n",
+            "x" * 129,
+        ):
+            with self.assertRaises(AiChiliError) as idem_ctx:
+                valid_client.create_generation(
+                    mode="t2v",
+                    model_id="h3-vdn",
+                    prompt="sunset ocean",
+                    idempotency_key=bad_idem,
+                )
+            self.assertEqual(idem_ctx.exception.code, "INVALID_IDEMPOTENCY_KEY")
 
         self.assertEqual(network_calls, 0)
 
@@ -339,6 +358,51 @@ class TestClientSecurityAndPolling(unittest.TestCase):
         self.assertEqual(resolve_base_url("http://localhost:8000/"), "http://localhost:8000")
         self.assertEqual(resolve_base_url("http://[::1]:8000/"), "http://[::1]:8000")
         self.assertEqual(validate_api_key("chili_sk_12345678"), "chili_sk_12345678")
+
+        # Verify both `detail` (videoapi.aichili.ai) and `error` (aichili.ai/api edge gateway) error envelopes
+        def detail_err_transport(
+            method: str,
+            url: str,
+            headers: dict[str, str],
+            body_bytes: bytes | None,
+            timeout_s: float,
+        ) -> tuple[int, bytes]:
+            return 402, json.dumps(
+                {"detail": {"code": "insufficient_credits", "message": "Wallet balance is 0"}}
+            ).encode("utf-8")
+
+        def gateway_err_transport(
+            method: str,
+            url: str,
+            headers: dict[str, str],
+            body_bytes: bytes | None,
+            timeout_s: float,
+        ) -> tuple[int, bytes]:
+            return 429, json.dumps(
+                {
+                    "error": {
+                        "code": "rate_limit_exceeded",
+                        "message": "Burst limit reached",
+                        "resolution_hint": "Retry after 2 seconds or upgrade to Studio & API tier.",
+                    }
+                }
+            ).encode("utf-8")
+
+        with self.assertRaises(AiChiliError) as det_ctx:
+            AiChiliClient(api_key="chili_sk_validkey123456", transport=detail_err_transport).get_credits()
+        self.assertEqual(det_ctx.exception.status, 402)
+        self.assertEqual(det_ctx.exception.code, "insufficient_credits")
+        self.assertEqual(det_ctx.exception.message, "Wallet balance is 0")
+
+        with self.assertRaises(AiChiliError) as gw_ctx:
+            AiChiliClient(api_key="chili_sk_validkey123456", transport=gateway_err_transport).get_credits()
+        self.assertEqual(gw_ctx.exception.status, 429)
+        self.assertEqual(gw_ctx.exception.code, "rate_limit_exceeded")
+        self.assertEqual(gw_ctx.exception.message, "Burst limit reached")
+        self.assertEqual(
+            gw_ctx.exception.resolution_hint,
+            "Retry after 2 seconds or upgrade to Studio & API tier.",
+        )
 
     def test_wait_for_generation_polling_and_timeout(self) -> None:
         statuses = iter(["queued", "running", "succeeded"])
@@ -549,6 +613,13 @@ class TestCliAndMcpSubprocesses(unittest.TestCase):
         self.assertEqual(json.loads(st_out.getvalue())["id"], "job_cli_01")
 
     def test_mcp_handler_and_stdio_subprocess_with_1mib_guard(self) -> None:
+        init_default = handle_jsonrpc_message(
+            {"jsonrpc": "2.0", "id": 0, "method": "initialize", "params": {}}
+        )
+        assert init_default is not None
+        self.assertEqual(DEFAULT_PROTOCOL_VERSION, "2025-06-18")
+        self.assertEqual(init_default["result"]["protocolVersion"], "2025-06-18")
+
         init_res = handle_jsonrpc_message(
             {
                 "jsonrpc": "2.0",
@@ -563,7 +634,6 @@ class TestCliAndMcpSubprocesses(unittest.TestCase):
         )
         assert init_res is not None
         self.assertEqual(init_res["result"]["protocolVersion"], "2025-03-26")
-        self.assertEqual(DEFAULT_PROTOCOL_VERSION, "2025-03-26")
         self.assertEqual(init_res["result"]["serverInfo"]["name"], "io.github.AI-Chili/aichili")
         self.assertEqual(init_res["result"]["serverInfo"]["version"], VERSION)
 

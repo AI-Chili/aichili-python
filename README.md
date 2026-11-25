@@ -235,7 +235,7 @@ python3 -m unittest discover -s tests -v
 
 - **AI Chili Studio**: [https://aichili.ai](https://aichili.ai)
 - **Developer Docs & API Reference**: [https://aichili.ai/developers](https://aichili.ai/developers)
-- **Changelog**: [https://aichili.ai/changelog](https://aichili.ai/changelog)
+- **Releases & Changelog**: [https://github.com/AI-Chili/aichili-python/releases](https://github.com/AI-Chili/aichili-python/releases)
 - **OnlyChili Cinema**: [https://onlychili.aichili.ai](https://onlychili.aichili.ai)
 - **Node.js CLI & MCP (`aichili` / `@aichili/mcp`)**: [https://github.com/AI-Chili/aichili](https://github.com/AI-Chili/aichili)
 

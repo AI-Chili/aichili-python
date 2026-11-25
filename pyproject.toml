@@ -51,7 +51,7 @@ aichili-mcp = "aichili.mcp:main"
 Homepage = "https://aichili.ai"
 Documentation = "https://aichili.ai/developers"
 Repository = "https://github.com/AI-Chili/aichili-python"
-Changelog = "https://aichili.ai/changelog"
+Changelog = "https://github.com/AI-Chili/aichili-python/releases"
 Issues = "https://github.com/AI-Chili/aichili-python/issues"
 
 [tool.hatch.build.targets.wheel]

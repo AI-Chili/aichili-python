@@ -131,9 +131,10 @@ VENDOR_QUOTED_MODELS = frozenset(
 )
 
 _API_KEY_PATTERN = re.compile(r"chili_sk_[A-Za-z0-9_-]{8,}\Z")
-_JOB_ID_PATTERN = re.compile(r"[A-Za-z0-9_-]{1,128}\Z")
+_JOB_ID_PATTERN = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]{0,127}\Z")
 _MODEL_ID_PATTERN = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,127}\Z")
 _CONTROL_OR_SPACE_RE = re.compile(r"[\s\x00-\x1f\x7f]")
+_CONTROL_CHAR_RE = re.compile(r"[\x00-\x1f\x7f]")
 
 MAX_HTTP_RESPONSE_BYTES = 16 * 1024 * 1024
 
@@ -150,12 +151,14 @@ class AiChiliError(Exception):
         *,
         status: int | None = None,
         details: Any = None,
+        resolution_hint: str | None = None,
     ) -> None:
         super().__init__(message)
         self.code = code
         self.message = message
         self.status = status
         self.details = details
+        self.resolution_hint = resolution_hint
 
 
 def _round_js(value: float, decimals: int = 4) -> float | int:
@@ -431,12 +434,22 @@ def _build_generation_body(
     if likeness_consent is not None:
         body["likeness_consent"] = bool(likeness_consent)
     if idempotency_key is not None:
-        if not isinstance(idempotency_key, str) or not (1 <= len(idempotency_key) <= 128):
+        if not isinstance(idempotency_key, str):
             raise AiChiliError(
                 "INVALID_IDEMPOTENCY_KEY",
-                "idempotency_key must be a string between 1 and 128 characters.",
+                "idempotency_key must be a non-empty string between 1 and 128 characters without control characters.",
             )
-        body["idempotency_key"] = idempotency_key
+        cleaned_idem = idempotency_key.strip()
+        if (
+            not cleaned_idem
+            or len(cleaned_idem) > 128
+            or _CONTROL_CHAR_RE.search(idempotency_key) is not None
+        ):
+            raise AiChiliError(
+                "INVALID_IDEMPOTENCY_KEY",
+                "idempotency_key must be a non-empty string between 1 and 128 characters without control characters.",
+            )
+        body["idempotency_key"] = cleaned_idem
     return body
 
 
@@ -793,20 +806,39 @@ class AiChiliClient:
                 parsed = {"raw": raw_text}
 
         if status < 200 or status >= 300:
-            detail = parsed.get("detail") if isinstance(parsed, dict) else None
-            if isinstance(detail, dict) and isinstance(detail.get("code"), str):
-                code = detail["code"]
+            envelope: Any = None
+            if isinstance(parsed, dict):
+                envelope = (
+                    parsed.get("detail")
+                    if parsed.get("detail") is not None
+                    else parsed.get("error")
+                )
+
+            if isinstance(envelope, dict) and isinstance(envelope.get("code"), str):
+                code = envelope["code"]
             else:
                 code = f"HTTP_{status}"
 
-            if isinstance(detail, dict) and isinstance(detail.get("message"), str):
-                message = detail["message"]
-            elif isinstance(detail, str):
-                message = detail
+            if isinstance(envelope, dict) and isinstance(envelope.get("message"), str):
+                message = envelope["message"]
+            elif isinstance(envelope, str):
+                message = envelope
             else:
                 message = f"AI Chili API returned HTTP {status}"
 
-            raise AiChiliError(code, message, status=status, details=parsed)
+            resolution_hint = (
+                envelope.get("resolution_hint")
+                if isinstance(envelope, dict) and isinstance(envelope.get("resolution_hint"), str)
+                else None
+            )
+
+            raise AiChiliError(
+                code,
+                message,
+                status=status,
+                details=parsed,
+                resolution_hint=resolution_hint,
+            )
 
         return parsed
 
