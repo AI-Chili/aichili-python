@@ -1,0 +1,67 @@
+[build-system]
+requires = ["hatchling>=1.18"]
+build-backend = "hatchling.build"
+
+[project]
+name = "aichili"
+version = "1.0.1"
+description = "Official Python SDK, CLI, and stdio MCP server for AI Chili (AIChili) cinematic AI video generation & OnlyChili Cinema"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+dependencies = []
+authors = [
+  {name = "AI Chili Inc.", email = "sales@aichili.ai"},
+]
+keywords = [
+  "aichili",
+  "ai-chili",
+  "ai-video-generation",
+  "text-to-video",
+  "image-to-video",
+  "talking-avatar",
+  "mcp",
+  "mcp-server",
+  "onlychili",
+  "cli",
+  "sdk",
+]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Multimedia :: Video",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+  "Typing :: Typed",
+]
+
+[project.scripts]
+aichili = "aichili.cli:main"
+aichili-mcp = "aichili.mcp:main"
+
+[project.urls]
+Homepage = "https://aichili.ai"
+Documentation = "https://aichili.ai/developers"
+Repository = "https://github.com/AI-Chili/aichili-python"
+Changelog = "https://github.com/AI-Chili/aichili-python/releases"
+Issues = "https://github.com/AI-Chili/aichili-python/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/aichili"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "/src",
+  "/tests",
+  "/README.md",
+  "/LICENSE",
+  "/pyproject.toml",
+]
