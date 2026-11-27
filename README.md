@@ -235,8 +235,17 @@ python3 -m unittest discover -s tests -v
 
 - **AI Chili Studio**: [https://aichili.ai](https://aichili.ai)
 - **Developer Docs & API Reference**: [https://aichili.ai/developers](https://aichili.ai/developers)
+- **AI Chili for Creators**: [https://aichili.ai/for-creators](https://aichili.ai/for-creators)
+- **Credit & Creator Payout Calculator**: [https://aichili.ai/calculator](https://aichili.ai/calculator)
+- **AI Chili vs AITube (`aitube.io` Alternative)**: [https://aichili.ai/vs/aitube](https://aichili.ai/vs/aitube)
+- **AI Chili vs Hollywood.AI (`hollywood.ai` Alternative)**: [https://aichili.ai/vs/hollywood-ai](https://aichili.ai/vs/hollywood-ai)
+- **All Platform Comparisons**: [https://aichili.ai/vs](https://aichili.ai/vs)
 - **Releases & Changelog**: [https://github.com/AI-Chili/aichili-python/releases](https://github.com/AI-Chili/aichili-python/releases)
 - **OnlyChili Cinema**: [https://onlychili.aichili.ai](https://onlychili.aichili.ai)
+- **OnlyChili Series Directory (55+ AI Series in 47 Languages)**: [https://onlychili.aichili.ai/series](https://onlychili.aichili.ai/series)
+- **AI Chili 2K Sci-Fi & Cyberpunk Anthology (SFW Showcase)**: [https://onlychili.aichili.ai/playlists/b328568a-acd9-4c25-8aa0-1405087925a5](https://onlychili.aichili.ai/playlists/b328568a-acd9-4c25-8aa0-1405087925a5)
+- **AI Chili 2K Wuxia & Fantasy Animation (SFW Showcase)**: [https://onlychili.aichili.ai/playlists/a798c49f-a68b-4171-b54b-d0bc75c0c52b](https://onlychili.aichili.ai/playlists/a798c49f-a68b-4171-b54b-d0bc75c0c52b)
+- **OnlyChili Creator Monetization (80% Net Revenue Share)**: [https://onlychili.aichili.ai/creators](https://onlychili.aichili.ai/creators)
 - **Node.js CLI & MCP (`aichili` / `@aichili/mcp`)**: [https://github.com/AI-Chili/aichili](https://github.com/AI-Chili/aichili)
 
 ## License
